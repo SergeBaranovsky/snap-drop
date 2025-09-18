@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  snap-share:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./data:/app/data
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme123}
+      # Optional S3 configuration
+      # - USE_S3=true
+      # - S3_BUCKET=your-bucket-name
+      # - S3_REGION=us-east-1
+      # - AWS_ACCESS_KEY_ID=your-access-key
+      # - AWS_SECRET_ACCESS_KEY=your-secret-key
+    restart: unless-stopped

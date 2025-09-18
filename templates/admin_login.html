@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap-Share Admin Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .login-container { max-width: 400px; width: 100%; background: white; border-radius: 10px; padding: 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #333; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input[type="password"] { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px; font-size: 16px; }
+        input[type="password"]:focus { outline: none; border-color: #007bff; }
+        .login-btn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .login-btn:hover { background: #0056b3; }
+        .back-link { display: inline-block; margin-top: 20px; color: #666; text-decoration: none; }
+        .back-link:hover { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>🔐 Admin Access</h1>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="password">Admin Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter admin password">
+            </div>
+            <button type="submit" class="login-btn">Access Dashboard</button>
+        </form>
+        <a href="/" class="back-link">← Back to Upload</a>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password').value;
+            window.location.href = `/admin/dashboard?password=${encodeURIComponent(password)}`;
+        });
+    </script>
+</body>
+</html>
