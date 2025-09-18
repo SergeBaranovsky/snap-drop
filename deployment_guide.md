@@ -1,11 +1,11 @@
-# Snap-Share Deployment Guide
+# Snap-Drop Deployment Guide
 
 ## Quick Start
 
 1. **Clone repository**:
 ```bash
-git clone https://github.com/yourusername/snap-share.git
-cd snap-share
+git clone https://github.com/SergeBaranovsky/snap-drop.git
+cd snap-drop
 ```
 
 2. **Configure environment**:
@@ -34,7 +34,7 @@ sudo apt update
 sudo apt install nginx certbot python3-certbot-nginx
 ```
 
-Create nginx config for subdomain (`/etc/nginx/sites-available/snap-share`):
+Create nginx config for subdomain (`/etc/nginx/sites-available/snap-drop`):
 
 ```nginx
 server {
@@ -58,7 +58,7 @@ server {
 
 Enable and get SSL:
 ```bash
-sudo ln -s /etc/nginx/sites-available/snap-share /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/snap-drop /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 sudo certbot --nginx -d upload.yourdomain.com
@@ -72,7 +72,7 @@ Update `docker-compose.yml`:
 version: '3.8'
 
 services:
-  snap-share:
+  snap-drop:
     build: .
     expose:
       - "80"

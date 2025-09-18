@@ -142,7 +142,7 @@ def upload_files():
             # Upload to S3 if configured
             s3_url = None
             if USE_S3:
-                s3_key = f"snap-share-uploads/{stored_filename}"
+                s3_key = f"snap-drop-uploads/{stored_filename}"
                 if upload_to_s3(file_path, s3_key):
                     s3_url = (
                         f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
@@ -221,7 +221,7 @@ def delete_file(file_id):
     if file_to_delete:
         # Delete from S3 if applicable
         if USE_S3 and file_to_delete.get("s3_url"):
-            s3_key = f"snap-share-uploads/{file_to_delete['stored_name']}"
+            s3_key = f"snap-drop-uploads/{file_to_delete['stored_name']}"
             try:
                 s3_client.delete_object(Bucket=S3_BUCKET, Key=s3_key)
             except ClientError:

@@ -1,7 +1,7 @@
-# snap-share
+# snap-drop
 A self-hosted, containerized web application designed to allow event attendees to easily share photos and videos without requiring account creation. 
 
-# Snap-Share
+# Snap-Drop
 
 A self-hosted photo and video upload service for event attendees.
 
@@ -21,8 +21,8 @@ A self-hosted photo and video upload service for event attendees.
 
 ```bash
 # Clone the repository
-git clone https://github.com/SergeBaranovsky/snap-share.git
-cd snap-share
+git clone https://github.com/SergeBaranovsky/snap-drop.git
+cd snap-drop
 
 # Copy environment template
 cp .env.example .env
@@ -134,7 +134,7 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
    sudo apt install nginx certbot python3-certbot-nginx
    
    # Configure subdomain (see deployment guide)
-   sudo nano /etc/nginx/sites-available/snap-drop-upload
+   sudo nano /etc/nginx/sites-available/snap-drop
    
    # Get SSL certificate
    sudo certbot --nginx -d upload.yourdomain.com
@@ -144,7 +144,7 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
    ```bash
    # On your Ubuntu VM
    git clone <your-repo>
-   cd snap-drop-upload
+   cd snap-drop
    
    # Set production environment variables
    nano docker-compose.yml
@@ -163,7 +163,7 @@ AWS_SECRET_ACCESS_KEY=your-secret-key
 ## Project Structure
 
 ```
-snap-share/
+snap-drop/
 ├── .vscode/                 # VS Code configuration
 │   ├── launch.json         # Debug configurations
 │   ├── settings.json       # Editor settings

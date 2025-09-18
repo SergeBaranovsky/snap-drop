@@ -1,8 +1,8 @@
-# Snap-Share - Design Overview
+# Snap-Drop - Design Overview
 
 ## Executive Summary
 
-Snap-Share is a self-hosted, containerized web application designed to allow event attendees to easily share photos and videos without requiring account creation. The system prioritizes simplicity for end users while providing comprehensive administrative controls for event organizers.
+Snap-Drop is a self-hosted, containerized web application designed to allow event attendees to easily share photos and videos without requiring account creation. The system prioritizes simplicity for end users while providing comprehensive administrative controls for event organizers.
 
 ## System Architecture
 
@@ -87,7 +87,7 @@ uploads/
 
 **S3 Storage:**
 ```
-s3://bucket-name/snap-share-uploads/
+s3://bucket-name/snap-drop-uploads/
 ├── {uuid}.jpg
 ├── {uuid}.mp4
 └── ...
@@ -318,7 +318,7 @@ graph TB
     LB --> App2[🐳 Container 2<br/>Flask + nginx]
     LB --> App3[🐳 Container 3<br/>Flask + nginx]
     
-    App1 --> SharedS3[☁️ Shared S3 Storage<br/>snap-share-uploads/]
+    App1 --> SharedS3[☁️ Shared S3 Storage<br/>snap-drop-uploads/]
     App2 --> SharedS3
     App3 --> SharedS3
     
