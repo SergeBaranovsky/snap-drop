@@ -7,7 +7,6 @@ from flask import (
     abort,
     redirect,
     url_for,
-    session,
 )
 import os
 import json
@@ -19,16 +18,12 @@ import mimetypes
 import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
-from werkzeug.security import check_password_hash, generate_password_hash
 
 # Load environment variables from .env file
 load_dotenv()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024 * 1024  # 3GB max file size
-app.secret_key = os.environ.get(
-    "SECRET_KEY", os.urandom(24)
-)  # Add secret key for sessions
 
 # Configuration
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "./uploads")
@@ -58,10 +53,8 @@ S3_REGION = os.environ.get("S3_REGION", "us-east-1")
 AWS_ACCESS_KEY = os.environ.get("AWS_ACCESS_KEY_ID", "")
 AWS_SECRET_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
 
-# Admin password (hashed)
-ADMIN_PASSWORD_HASH = os.environ.get(
-    "ADMIN_PASSWORD_HASH", generate_password_hash("changeme123")
-)
+# Admin password
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "changeme123")
 
 if USE_S3 and S3_BUCKET:
     s3_client = boto3.client(
@@ -193,40 +186,28 @@ def upload_files():
         )
 
 
-@app.route("/admin", methods=["GET", "POST"])
+@app.route("/admin")
 def admin_login():
-    if request.method == "POST":
-        password = request.form.get("password")
-        if check_password_hash(ADMIN_PASSWORD_HASH, password):
-            session["admin_authenticated"] = True
-            return redirect(url_for("admin_dashboard"))
-        else:
-            return render_template("admin_login.html", error="Invalid password")
-
     return render_template("admin_login.html")
 
 
 @app.route("/admin/dashboard")
 def admin_dashboard():
-    if not session.get("admin_authenticated"):
+    password = request.args.get("password")
+    if password != ADMIN_PASSWORD:
         return redirect(url_for("admin_login"))
 
     metadata = load_metadata()
     # Sort by upload time, newest first
     metadata.sort(key=lambda x: x["upload_time"], reverse=True)
 
-    return render_template("admin_dashboard.html", files=metadata)
+    return render_template("admin_dashboard.html", files=metadata, password=password)
 
 
-@app.route("/admin/logout")
-def admin_logout():
-    session.pop("admin_authenticated", None)
-    return redirect(url_for("admin_login"))
-
-
-@app.route("/admin/delete/<file_id>", methods=["POST"])
+@app.route("/admin/delete/<file_id>")
 def delete_file(file_id):
-    if not session.get("admin_authenticated"):
+    password = request.args.get("password")
+    if password != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
 
     metadata = load_metadata()

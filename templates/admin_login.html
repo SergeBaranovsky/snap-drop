@@ -17,16 +17,12 @@
         .login-btn:hover { background: #0056b3; }
         .back-link { display: inline-block; margin-top: 20px; color: #666; text-decoration: none; }
         .back-link:hover { color: #007bff; }
-        .error { color: #dc3545; margin-bottom: 20px; padding: 10px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 5px; }
     </style>
 </head>
 <body>
     <div class="login-container">
         <h1>🔐 Admin Access</h1>
-        {% if error %}
-        <div class="error">{{ error }}</div>
-        {% endif %}
-        <form method="POST">
+        <form id="login-form">
             <div class="form-group">
                 <label for="password">Admin Password</label>
                 <input type="password" id="password" name="password" required placeholder="Enter admin password">
@@ -37,7 +33,7 @@
     </div>
 
     <script>
-        document.querySelector('form').addEventListener('submit', (e) => {
+        document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const password = document.getElementById('password').value;
             window.location.href = `/admin/dashboard?password=${encodeURIComponent(password)}`;
