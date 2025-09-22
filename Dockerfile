@@ -19,6 +19,10 @@ COPY static/ static/
 COPY nginx.conf /etc/nginx/sites-available/snap-drop
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Enable snap-drop site and disable default
+RUN rm -f /etc/nginx/sites-enabled/default
+RUN ln -s /etc/nginx/sites-available/snap-drop /etc/nginx/sites-enabled/snap-drop
+
 # Create upload directory
 RUN mkdir -p /app/uploads
 
