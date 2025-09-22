@@ -44,7 +44,12 @@
 </head>
 <body>
     <div class="container">
-        <a href="/" class="back-link">← Back to Upload</a>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <a href="/" class="back-link">← Back to Upload</a>
+            <form method="POST" action="/admin/logout" style="display: inline;">
+                <button type="submit" class="btn btn-secondary">🚪 Logout</button>
+            </form>
+        </div>
         <h1>📊 Snap-Drop Admin Dashboard</h1>
         
         <div class="stats">
@@ -184,8 +189,8 @@
             }
             
             try {
-                const response = await fetch(`/admin/delete/${fileId}?password={{ password }}`, {
-                    method: 'GET'
+                const response = await fetch(`/admin/delete/${fileId}`, {
+                    method: 'POST'
                 });
                 
                 const result = await response.json();

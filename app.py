@@ -7,11 +7,13 @@ from flask import (
     abort,
     redirect,
     url_for,
+    session,
 )
 import os
 import json
 import uuid
 from datetime import datetime
+from functools import wraps
 from werkzeug.utils import secure_filename
 from werkzeug.exceptions import RequestEntityTooLarge
 import mimetypes
@@ -24,6 +26,17 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 3 * 1024 * 1024 * 1024  # 3GB max file size
+
+# Session configuration for admin authentication
+app.secret_key = os.environ.get(
+    "SECRET_KEY", "change-me-in-production-" + str(uuid.uuid4())
+)
+app.config["SESSION_COOKIE_SECURE"] = (
+    os.environ.get("USE_HTTPS", "false").lower() == "true"
+)
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = 3600  # 1 hour timeout
 
 # Configuration
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "./uploads")
@@ -68,6 +81,18 @@ else:
     USE_S3 = False
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def require_admin_session(f):
+    """Decorator to require admin session for protected routes"""
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("admin_authenticated"):
+            return redirect(url_for("admin_login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 def load_metadata():
@@ -191,24 +216,37 @@ def admin_login():
     return render_template("admin_login.html")
 
 
-@app.route("/admin/dashboard")
-def admin_dashboard():
-    password = request.args.get("password")
-    if password != ADMIN_PASSWORD:
-        return redirect(url_for("admin_login"))
+@app.route("/admin/login", methods=["POST"])
+def admin_login_handler():
+    password = request.form.get("password")
+    if password == ADMIN_PASSWORD:
+        session["admin_authenticated"] = True
+        session.permanent = True
+        return redirect(url_for("admin_dashboard"))
+    else:
+        return redirect(url_for("admin_login") + "?error=1")
 
+
+@app.route("/admin/dashboard")
+@require_admin_session
+def admin_dashboard():
     metadata = load_metadata()
     # Sort by upload time, newest first
     metadata.sort(key=lambda x: x["upload_time"], reverse=True)
 
-    return render_template("admin_dashboard.html", files=metadata, password=password)
+    return render_template("admin_dashboard.html", files=metadata)
 
 
-@app.route("/admin/delete/<file_id>")
+@app.route("/admin/logout", methods=["POST"])
+@require_admin_session
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+@app.route("/admin/delete/<file_id>", methods=["POST"])
+@require_admin_session
 def delete_file(file_id):
-    password = request.args.get("password")
-    if password != ADMIN_PASSWORD:
-        return jsonify({"error": "Unauthorized"}), 401
 
     metadata = load_metadata()
     file_to_delete = None

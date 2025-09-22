@@ -22,22 +22,19 @@
 <body>
     <div class="login-container">
         <h1>🔐 Admin Access</h1>
-        <form id="login-form">
+        <form id="login-form" method="POST" action="/admin/login">
             <div class="form-group">
                 <label for="password">Admin Password</label>
                 <input type="password" id="password" name="password" required placeholder="Enter admin password">
             </div>
             <button type="submit" class="login-btn">Access Dashboard</button>
+            {% if request.args.get('error') %}
+            <div class="error-message" style="color: #dc3545; margin-top: 15px; text-align: center;">
+                Invalid password. Please try again.
+            </div>
+            {% endif %}
         </form>
         <a href="/" class="back-link">← Back to Upload</a>
     </div>
-
-    <script>
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const password = document.getElementById('password').value;
-            window.location.href = `/admin/dashboard?password=${encodeURIComponent(password)}`;
-        });
-    </script>
 </body>
 </html>
