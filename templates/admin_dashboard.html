@@ -113,6 +113,16 @@
                 </div>
                 <div class="file-info">
                     <div class="file-name">{{ file.original_name }}</div>
+                    {% if file.folder_path %}
+                    <div class="file-folder" style="font-size: 13px; color: #007bff; margin-bottom: 5px;">
+                        📁 {{ file.folder_path }}
+                    </div>
+                    {% endif %}
+                    {% if file.stored_name and file.stored_name != file.original_name %}
+                    <div class="file-stored-name" style="font-size: 12px; color: #6c757d; margin-bottom: 5px;">
+                        💾 Stored as: {{ file.stored_name }}
+                    </div>
+                    {% endif %}
                     <div class="file-meta">
                         Uploaded: {{ file.upload_time[:19].replace('T', ' ') }}<br>
                         {% if file.file_size %}Size: {{ "%.1f"|format(file.file_size/1024/1024) }} MB{% endif %}
