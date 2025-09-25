@@ -234,6 +234,14 @@ def upload_files():
 
 @app.route("/admin")
 def admin_login():
+    # Check if admin is already authenticated
+    if session.get("admin_authenticated"):
+        logger.info(
+            f"Already authenticated admin accessing /admin, redirecting to dashboard"
+        )
+        return redirect(url_for("admin_dashboard"))
+
+    # Show login form for unauthenticated users
     return render_template("admin_login.html")
 
 
