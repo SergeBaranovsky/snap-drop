@@ -141,6 +141,46 @@ def get_file_type(filename):
     return "unknown"
 
 
+def sanitize_folder_name(name):
+    """Sanitize name for filesystem compatibility"""
+    # Use secure_filename to handle most cases, then replace spaces with hyphens
+    sanitized = secure_filename(name)
+    # Replace spaces and underscores with hyphens for consistency
+    sanitized = sanitized.replace(" ", "-").replace("_", "-")
+    # Remove any double hyphens
+    while "--" in sanitized:
+        sanitized = sanitized.replace("--", "-")
+    # Remove leading/trailing hyphens
+    sanitized = sanitized.strip("-")
+    # Ensure we have something left, fallback to 'user' if empty
+    return sanitized if sanitized else "user"
+
+
+def generate_upload_folder(uploader_name, upload_time):
+    """Generate sanitized folder name from uploader name and timestamp"""
+    # Sanitize the uploader name
+    clean_name = sanitize_folder_name(uploader_name)
+
+    # Format timestamp as YYYYMMDD-HHMMSS
+    if isinstance(upload_time, str):
+        # Parse ISO format timestamp
+        upload_time = datetime.fromisoformat(upload_time.replace("Z", "+00:00"))
+
+    timestamp_str = upload_time.strftime("%Y%m%d-%H%M%S")
+
+    # Combine name and timestamp
+    folder_name = f"{clean_name}-{timestamp_str}"
+
+    return folder_name
+
+
+def ensure_upload_directory(folder_path):
+    """Create directory if it doesn't exist"""
+    full_path = os.path.join(UPLOAD_FOLDER, folder_path)
+    os.makedirs(full_path, exist_ok=True)
+    return full_path
+
+
 def upload_to_s3(file_path, s3_key):
     if not USE_S3:
         return False
@@ -174,6 +214,13 @@ def upload_files():
     uploaded_files = []
     metadata = load_metadata()
 
+    # Generate upload folder for this batch of files
+    upload_time = datetime.now()
+    folder_path = generate_upload_folder(name, upload_time)
+
+    # Create the upload directory
+    upload_dir = ensure_upload_directory(folder_path)
+
     for file in files:
         if file and file.filename and allowed_file(file.filename):
             # Generate unique filename
@@ -182,13 +229,14 @@ def upload_files():
             ext = original_filename.rsplit(".", 1)[1].lower()
             stored_filename = f"{file_id}.{ext}"
 
-            file_path = os.path.join(UPLOAD_FOLDER, stored_filename)
+            # Save to organized folder structure
+            file_path = os.path.join(upload_dir, stored_filename)
             file.save(file_path)
 
-            # Upload to S3 if configured
+            # Upload to S3 if configured (with organized path)
             s3_url = None
             if USE_S3:
-                s3_key = f"snap-drop-uploads/{stored_filename}"
+                s3_key = f"snap-drop-uploads/{folder_path}/{stored_filename}"
                 if upload_to_s3(file_path, s3_key):
                     s3_url = (
                         f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{s3_key}"
@@ -196,12 +244,14 @@ def upload_files():
                     # Remove local file if S3 upload successful
                     os.remove(file_path)
 
-            # Add to metadata
+            # Add to metadata with new folder structure
             file_metadata = {
                 "id": file_id,
                 "original_name": original_filename,
                 "stored_name": stored_filename,
-                "upload_time": datetime.now().isoformat(),
+                "folder_path": folder_path,
+                "full_path": f"{folder_path}/{stored_filename}",
+                "upload_time": upload_time.isoformat(),
                 "uploader_name": name,
                 "uploader_email": email,
                 "file_type": get_file_type(original_filename),
@@ -295,14 +345,29 @@ def delete_file(file_id):
     if file_to_delete:
         # Delete from S3 if applicable
         if USE_S3 and file_to_delete.get("s3_url"):
-            s3_key = f"snap-drop-uploads/{file_to_delete['stored_name']}"
+            # Use new folder structure for S3 key if available
+            if file_to_delete.get("folder_path"):
+                s3_key = f"snap-drop-uploads/{file_to_delete['folder_path']}/{file_to_delete['stored_name']}"
+            else:
+                # Backward compatibility for old files
+                s3_key = f"snap-drop-uploads/{file_to_delete['stored_name']}"
             try:
                 s3_client.delete_object(Bucket=S3_BUCKET, Key=s3_key)
             except ClientError:
                 pass
 
         # Delete local file if it exists
-        local_path = os.path.join(UPLOAD_FOLDER, file_to_delete["stored_name"])
+        if file_to_delete.get("folder_path"):
+            # New folder structure
+            local_path = os.path.join(
+                UPLOAD_FOLDER,
+                file_to_delete["folder_path"],
+                file_to_delete["stored_name"],
+            )
+        else:
+            # Backward compatibility for old files
+            local_path = os.path.join(UPLOAD_FOLDER, file_to_delete["stored_name"])
+
         if os.path.exists(local_path):
             os.remove(local_path)
 
@@ -321,7 +386,17 @@ def serve_file(file_id):
             if USE_S3 and file_meta.get("s3_url"):
                 return redirect(file_meta["s3_url"])
             else:
-                file_path = os.path.join(UPLOAD_FOLDER, file_meta["stored_name"])
+                # Check for new folder structure first
+                if file_meta.get("folder_path"):
+                    file_path = os.path.join(
+                        UPLOAD_FOLDER,
+                        file_meta["folder_path"],
+                        file_meta["stored_name"],
+                    )
+                else:
+                    # Backward compatibility for old files
+                    file_path = os.path.join(UPLOAD_FOLDER, file_meta["stored_name"])
+
                 if os.path.exists(file_path):
                     return send_file(file_path, as_attachment=False)
 
