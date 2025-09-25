@@ -125,6 +125,36 @@ def migrate_files(dry_run=False):
         print("ℹ️  No metadata found - nothing to migrate")
         return
 
+    # PRE-FLIGHT CHECKS - Validate permissions before any file operations
+    if not dry_run:
+        print("🔍 Validating permissions before migration...")
+
+        # Check metadata file write permissions
+        if not os.access(METADATA_FILE, os.W_OK):
+            print(f"✗ Cannot write to metadata file: {METADATA_FILE}")
+            print(f"💡 Fix with: chmod 644 {METADATA_FILE}")
+            return
+
+        # Test write access by attempting to open for append
+        try:
+            with open(METADATA_FILE, "a"):
+                pass
+        except PermissionError:
+            print(f"✗ No write permission for metadata file: {METADATA_FILE}")
+            print(f"💡 Fix with: chmod 644 {METADATA_FILE}")
+            return
+        except Exception as e:
+            print(f"✗ Cannot access metadata file: {e}")
+            return
+
+        # Check upload directory write permissions
+        if not os.access(UPLOAD_FOLDER, os.W_OK):
+            print(f"✗ Cannot write to upload directory: {UPLOAD_FOLDER}")
+            print(f"💡 Fix with: chmod 755 {UPLOAD_FOLDER}")
+            return
+
+        print("✓ All permission checks passed")
+
     # Create backup
     if not dry_run:
         backup_metadata()
