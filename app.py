@@ -82,7 +82,17 @@ AWS_SECRET_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
 # Admin password
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "changeme123")
 
+# Debug logging for S3 configuration
+logger.info("=== S3 Configuration Debug ===")
+logger.info(f"USE_S3 env var: '{os.environ.get('USE_S3', 'NOT_SET')}'")
+logger.info(f"USE_S3 parsed: {USE_S3}")
+logger.info(f"S3_BUCKET: '{S3_BUCKET}' (empty: {not S3_BUCKET})")
+logger.info(f"S3_REGION: '{S3_REGION}'")
+logger.info(f"AWS_ACCESS_KEY_ID: {'SET' if AWS_ACCESS_KEY else 'NOT_SET'}")
+logger.info(f"AWS_SECRET_ACCESS_KEY: {'SET' if AWS_SECRET_KEY else 'NOT_SET'}")
+
 if USE_S3 and S3_BUCKET:
+    logger.info("✅ S3 client initialization: SUCCESS")
     s3_client = boto3.client(
         "s3",
         region_name=S3_REGION,
@@ -90,8 +100,15 @@ if USE_S3 and S3_BUCKET:
         aws_secret_access_key=AWS_SECRET_KEY,
     )
 else:
+    logger.warning(
+        "❌ S3 client initialization: FAILED - falling back to local storage"
+    )
+    logger.warning(f"   Reason: USE_S3={USE_S3}, S3_BUCKET_EMPTY={not S3_BUCKET}")
     s3_client = None
     USE_S3 = False
+
+logger.info(f"Final storage mode: {'S3' if USE_S3 else 'LOCAL'}")
+logger.info("=== End S3 Configuration Debug ===")
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
