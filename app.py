@@ -200,11 +200,26 @@ def ensure_upload_directory(folder_path):
 
 def upload_to_s3(file_path, s3_key):
     if not USE_S3:
+        logger.warning(f"S3 upload skipped - USE_S3 is False")
         return False
+
+    logger.info(f"🔄 Attempting S3 upload: {s3_key}")
+    logger.info(f"   Local file: {file_path}")
+    logger.info(f"   S3 bucket: {S3_BUCKET}")
+    logger.info(f"   S3 region: {S3_REGION}")
+
     try:
         s3_client.upload_file(file_path, S3_BUCKET, s3_key)
+        logger.info(f"✅ S3 upload SUCCESS: {s3_key}")
         return True
-    except ClientError:
+    except ClientError as e:
+        logger.error(f"❌ S3 upload FAILED: {s3_key}")
+        logger.error(f"   Error code: {e.response['Error']['Code']}")
+        logger.error(f"   Error message: {e.response['Error']['Message']}")
+        return False
+    except Exception as e:
+        logger.error(f"❌ S3 upload FAILED with unexpected error: {s3_key}")
+        logger.error(f"   Error: {str(e)}")
         return False
 
 
