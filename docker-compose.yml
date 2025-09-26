@@ -10,9 +10,9 @@ services:
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD:-changeme123}
       # Optional S3 configuration
-      # - USE_S3=true
-      # - S3_BUCKET=your-bucket-name
-      # - S3_REGION=us-east-1
-      # - AWS_ACCESS_KEY_ID=your-access-key
-      # - AWS_SECRET_ACCESS_KEY=your-secret-key
+      - USE_S3=${USE_S3:-false}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_REGION=${S3_REGION:-us-wedst-2}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     restart: unless-stopped
